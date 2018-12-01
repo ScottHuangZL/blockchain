@@ -9,7 +9,7 @@ require (
 	github.com/pkg/errors v0.8.0 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/stretchr/testify v1.2.2 // indirect
-	golang.org/x/net v0.0.0
+	golang.org/x/net v0.0.0 //indirect
 )
 
 replace golang.org/x/net v0.0.0 => github.com/golang/net v0.0.0-20181129055619-fae4c4e3ad76

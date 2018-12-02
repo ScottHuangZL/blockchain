@@ -38,9 +38,11 @@ func (cli *CommandLine) printChain() {
 		block := iter.Next()
 		fmt.Printf("Previous Hash %X \n", block.PrevHash)
 		fmt.Printf("Hash: %X \n", block.Hash)
+		fmt.Printf("Nounce: %X \n", block.Nounce)
 
 		pow := blockchain.NewProof(block)
 		fmt.Printf("PoW: %s\n", strconv.FormatBool(pow.Validate()))
+
 
 		fmt.Println()
 
@@ -64,11 +66,12 @@ func (cli *CommandLine) getBalance(address string) {
 	balance := 0
 	UTXOs := chain.FindUTXO(address)
 
+
 	for _, out := range UTXOs {
 		balance += out.Value
 	}
 
-	fmt.Println("Balance  of  %s:  %d \n", address, balance)
+	fmt.Printf("Balance  of  %s:  %d \n", address, balance)
 }
 
 func (cli *CommandLine) send(from, to string, amount int) {

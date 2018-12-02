@@ -145,20 +145,25 @@ func (iter *Iterator) Next() *Block {
 
 //FindUnspentTransactions method
 func (chain *BlockChain) FindUnspentTransactions(address string) []Transaction {
-	var unspentTxs []Transaction
-	spentTXOs := make(map[string][]int)
+	var unspentTxs []Transaction        //unspent transactions are transactions that have outputs which not references by other inputs.
+	spentTXOs := make(map[string][]int) //spent transaction outputs
 	iter := chain.Iterator()
 	for {
 		block := iter.Next()
 
+		//for each block transaction
 		for _, tx := range block.Transactions {
-			txID := hex.EncodeToString(tx.ID)
+			//convert the transaction id to string
+			txIdString := hex.EncodeToString(tx.ID)
 		Outputs:
+			//each transaction have its own outputs array
 			for outIdx, out := range tx.Outputs {
-				if spentTXOs[txID] != nil {
-					for _, spentOut := range spentTXOs[txID] {
+				//have this transactions spent records
+				if spentTXOs[txIdString] != nil {
+					//the spend out slice
+					for _, spentOut := range spentTXOs[txIdString] {
 						if spentOut == outIdx {
-							continue Outputs
+							continue Outputs //ignore if this outputs been referenced by other inputs
 						}
 					}
 				}
@@ -167,10 +172,11 @@ func (chain *BlockChain) FindUnspentTransactions(address string) []Transaction {
 				}
 			}
 			if tx.IsCoinbase() == false {
+				//each block also have its own inputs, need range too
 				for _, in := range tx.Inputs {
-					if in.CanUnlock(address) {
-						inTxID := hex.EncodeToString(in.ID)
-						spentTXOs[inTxID] = append(spentTXOs[inTxID], in.Out)
+					if in.CanUnlock(address) { //it mean already spent if the input can unlock by this address
+						inTxIdString := hex.EncodeToString(in.ID)
+						spentTXOs[inTxIdString] = append(spentTXOs[inTxIdString], in.Out)
 					}
 				}
 			}
@@ -183,7 +189,7 @@ func (chain *BlockChain) FindUnspentTransactions(address string) []Transaction {
 	return unspentTxs
 }
 
-//FindUTXO method
+//FindUTXO method  find unspent transaction output
 func (chain *BlockChain) FindUTXO(address string) []TxOutput {
 	var UTXOs []TxOutput
 	unspentTransactions := chain.FindUnspentTransactions(address)
@@ -206,11 +212,11 @@ func (chain *BlockChain) FindSpendableOutputs(address string, amount int) (int, 
 
 Work:
 	for _, tx := range unspentTxs {
-		txID := hex.EncodeToString(tx.ID)
+		txIdString := hex.EncodeToString(tx.ID)
 		for outIdx, out := range tx.Outputs {
 			if out.CanBeUnlocked(address) && accumulated < amount {
 				accumulated += out.Value
-				unspentOuts[txID] = append(unspentOuts[txID], outIdx)
+				unspentOuts[txIdString] = append(unspentOuts[txIdString], outIdx)
 				if accumulated >= amount {
 					break Work
 				}

@@ -13,3 +13,6 @@
 
 #ignore IDE
 *.idea
+/vendor
+/.idea
+/.vscode

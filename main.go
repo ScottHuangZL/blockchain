@@ -1,8 +1,8 @@
 package main
 
 import (
-	"github.com/ScottHuangZL/blockchain/cli"
 	"os"
+	"github.com/ScottHuangZL/blockchain/cli"
 )
 
 
@@ -11,5 +11,4 @@ func main() {
 	defer os.Exit(0)
 	cmd := cli.CommandLine{}
 	cmd.Run()
-
 }

@@ -8,6 +8,7 @@ import (
 "strconv"
 
 "github.com/ScottHuangZL/blockchain/blockchain"
+"github.com/ScottHuangZL/blockchain/wallet"
 )
 
 //CommandLine type
@@ -20,6 +21,8 @@ func (cli *CommandLine) printUsage() {
 	fmt.Println(" createblockchain -address ADDRESS - create a blockchain")
 	fmt.Println(" printchain - Print the blocks in the chain")
 	fmt.Println(" send -from FROM -to TO -amount AMOUNT - Send amound")
+	fmt.Println(" createwallet - Creates a new wallet")
+	fmt.Println(" listaddresses - Lists the address in our wallet file")
 }
 
 func (cli *CommandLine) validateArgs() {
@@ -83,12 +86,32 @@ func (cli *CommandLine) send(from, to string, amount int) {
 	fmt.Println("Success!")
 }
 
+
+func (cli *CommandLine) listAddresses(){
+	wallets, _:= wallet.CreateWallets()
+	addresses := wallets.GetAllAddresses()
+
+	for _, address := range addresses{
+		fmt.Println(address)
+	}
+}
+
+func (cli *CommandLine) createWallet(){
+	wallets, _:= wallet.CreateWallets()
+	address := wallets.AddWallet()
+	wallets.SaveFile()
+	fmt.Printf("New address is: %s\n",address)
+}
+
+
 func (cli *CommandLine) Run() {
 	cli.validateArgs()
 	getBalanceCmd := flag.NewFlagSet("getbalance", flag.ExitOnError)
 	createBlockChainCmd := flag.NewFlagSet("createblockchain", flag.ExitOnError)
 	sendCmd := flag.NewFlagSet("send", flag.ExitOnError)
 	printChainCmd := flag.NewFlagSet("printchain", flag.ExitOnError)
+	createWalletCmd := flag.NewFlagSet("createwallet", flag.ExitOnError)
+	listAddressesCmd := flag.NewFlagSet("listaddresses",flag.ExitOnError)
 
 	getBalanceAddress := getBalanceCmd.String("address", "", "The balance address")
 	createBlockchainAddress := createBlockChainCmd.String("address", "", "The blockchain address")
@@ -109,6 +132,12 @@ func (cli *CommandLine) Run() {
 		blockchain.Handle(err)
 	case "printchain":
 		err := printChainCmd.Parse(os.Args[2:])
+		blockchain.Handle(err)
+	case "createwallet":
+		err := createWalletCmd.Parse(os.Args[2:])
+		blockchain.Handle(err)
+	case "listaddresses":
+		err := listAddressesCmd.Parse(os.Args[2:])
 		blockchain.Handle(err)
 	default:
 		cli.printUsage()
@@ -141,6 +170,14 @@ func (cli *CommandLine) Run() {
 
 	if printChainCmd.Parsed() {
 		cli.printChain()
+	}
+
+	if listAddressesCmd.Parsed(){
+		cli.listAddresses()
+	}
+
+	if createWalletCmd.Parsed(){
+		cli.createWallet()
 	}
 }
 

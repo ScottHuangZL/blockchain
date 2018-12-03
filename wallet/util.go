@@ -1,20 +1,16 @@
 package wallet
 
-import(
+import (
 	"github.com/mr-tron/base58"
-	"github.com/ScottHuangZL/blockchain/blockchain"
-
 )
 
-func Base58Encode(input []byte) []byte{
+func Base58Encode(input []byte) []byte {
 	encode := base58.Encode(input)
 	return []byte(encode)
 }
 
-func Base58Decode(input []byte) []byte{
-	decode, err:= base58.Decode(string(input[:]))
-	blockchain.Handle(err)
+func Base58Decode(input []byte) []byte {
+	decode, err := base58.Decode(string(input[:]))
+	Handle(err)
 	return decode
 }
-
-

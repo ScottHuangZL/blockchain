@@ -5,7 +5,6 @@ import (
 	"crypto/elliptic"
 	"encoding/gob"
 	"fmt"
-	"github.com/ScottHuangZL/blockchain/blockchain"
 	"io/ioutil"
 	"os"
 )
@@ -21,10 +20,10 @@ func (ws *Wallets) SaveFile(){
 	gob.Register(elliptic.P256())
 	encoder:=gob.NewEncoder(&content)
 	err := encoder.Encode(ws)
-	blockchain.Handle(err)
+	Handle(err)
 
 	err = ioutil.WriteFile(walletFile, content.Bytes(),0644)
-	blockchain.Handle(err)
+	Handle(err)
 }
 
 func (ws *Wallets) LoadFile() error{
@@ -37,7 +36,7 @@ func (ws *Wallets) LoadFile() error{
 	gob.Register(elliptic.P256())
 	decoder := gob.NewDecoder(bytes.NewReader(fileContent))
 	err = decoder.Decode(&wallets)
-	blockchain.Handle(err)
+	Handle(err)
 
 	ws.Wallets = wallets.Wallets
 	return nil

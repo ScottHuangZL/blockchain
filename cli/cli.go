@@ -1,15 +1,19 @@
 package cli
 
 import (
-"flag"
-"fmt"
-"os"
-"runtime"
-"strconv"
+	"flag"
+	"fmt"
+	"log"
+	"os"
+	"runtime"
+	"strconv"
 
-"github.com/ScottHuangZL/blockchain/blockchain"
-"github.com/ScottHuangZL/blockchain/wallet"
+	//"../blockchain"
+	//"../wallet"
+	"github.com/ScottHuangZL/blockchain/blockchain"
+	"github.com/ScottHuangZL/blockchain/wallet"
 )
+
 
 //CommandLine type
 type CommandLine struct {
@@ -46,6 +50,9 @@ func (cli *CommandLine) printChain() {
 		pow := blockchain.NewProof(block)
 		fmt.Printf("PoW: %s\n", strconv.FormatBool(pow.Validate()))
 
+		for _, tx := range block.Transactions {
+			fmt.Println(tx)
+		}
 
 		fmt.Println()
 
@@ -57,18 +64,27 @@ func (cli *CommandLine) printChain() {
 }
 
 func (cli *CommandLine) createBlockChain(address string) {
+	if !wallet.ValidateAddress(address) {
+		log.Panic("Address is not valid")
+	}
 	chain := blockchain.InitBlockChain(address)
 	chain.Database.Close()
 	fmt.Println("Finished!")
 }
 
 func (cli *CommandLine) getBalance(address string) {
+	if !wallet.ValidateAddress(address) {
+		log.Panic("Address is not valid")
+	}
+
 	chain := blockchain.ContinueBlockChain(address)
 	defer chain.Database.Close()
 
 	balance := 0
-	UTXOs := chain.FindUTXO(address)
 
+	pubKeyHash := wallet.Base58Decode([]byte(address))
+	pubKeyHash = pubKeyHash[1 : len(pubKeyHash)-wallet.ChecksumLength]
+	UTXOs := chain.FindUTXO(pubKeyHash)
 
 	for _, out := range UTXOs {
 		balance += out.Value
@@ -78,6 +94,12 @@ func (cli *CommandLine) getBalance(address string) {
 }
 
 func (cli *CommandLine) send(from, to string, amount int) {
+	if !wallet.ValidateAddress(from) {
+		log.Panic("From address is not valid")
+	}
+	if !wallet.ValidateAddress(to) {
+		log.Panic("To address is not valid")
+	}
 	chain := blockchain.ContinueBlockChain(from)
 	defer chain.Database.Close()
 
@@ -86,23 +108,21 @@ func (cli *CommandLine) send(from, to string, amount int) {
 	fmt.Println("Success!")
 }
 
-
-func (cli *CommandLine) listAddresses(){
-	wallets, _:= wallet.CreateWallets()
+func (cli *CommandLine) listAddresses() {
+	wallets, _ := wallet.CreateWallets()
 	addresses := wallets.GetAllAddresses()
 
-	for _, address := range addresses{
+	for _, address := range addresses {
 		fmt.Println(address)
 	}
 }
 
-func (cli *CommandLine) createWallet(){
-	wallets, _:= wallet.CreateWallets()
+func (cli *CommandLine) createWallet() {
+	wallets, _ := wallet.CreateWallets()
 	address := wallets.AddWallet()
 	wallets.SaveFile()
-	fmt.Printf("New address is: %s\n",address)
+	fmt.Printf("New address is: %s\n", address)
 }
-
 
 func (cli *CommandLine) Run() {
 	cli.validateArgs()
@@ -111,7 +131,7 @@ func (cli *CommandLine) Run() {
 	sendCmd := flag.NewFlagSet("send", flag.ExitOnError)
 	printChainCmd := flag.NewFlagSet("printchain", flag.ExitOnError)
 	createWalletCmd := flag.NewFlagSet("createwallet", flag.ExitOnError)
-	listAddressesCmd := flag.NewFlagSet("listaddresses",flag.ExitOnError)
+	listAddressesCmd := flag.NewFlagSet("listaddresses", flag.ExitOnError)
 
 	getBalanceAddress := getBalanceCmd.String("address", "", "The balance address")
 	createBlockchainAddress := createBlockChainCmd.String("address", "", "The blockchain address")
@@ -172,12 +192,11 @@ func (cli *CommandLine) Run() {
 		cli.printChain()
 	}
 
-	if listAddressesCmd.Parsed(){
+	if listAddressesCmd.Parsed() {
 		cli.listAddresses()
 	}
 
-	if createWalletCmd.Parsed(){
+	if createWalletCmd.Parsed() {
 		cli.createWallet()
 	}
 }
-

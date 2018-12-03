@@ -23,5 +23,11 @@ For tag0.31 add below very basic wallet, still not integrate into block chain, w
 - blockchain createwallet  (You can try run multiple times)
 - blockchain listaddresses (List all addresses which created before)
 
+For tag0.41 add signature, you can delete tmp/wallets.data & tmp/blocks/*.* firstly
+- blockchain createwallet (You can run this multiple times)
+- blockchain listaddresses (List all addresses which created before)
+- blockchain send -from "The address list in above" -to "another address list in above" -amount 50
+- blockchain printchain
+- blockchain getbalance -address "The address list in above"
 
 Note: I get ideas from TensorFlow, thanks.

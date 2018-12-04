@@ -15,6 +15,12 @@ type TxOutput struct {
 	PubKeyHash []byte //a value that is needed to unlock the token which are inside the value field
 }
 
+
+//TxOutputs to contain multiple TxOutput
+type TxOutputs struct {
+	Outputs []TxOutput
+}
+
 //TxInput type
 type TxInput struct {
 	ID        []byte //references the transaction that the output is inside it

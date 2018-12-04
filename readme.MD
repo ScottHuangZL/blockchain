@@ -1,3 +1,4 @@
+#Readme
 #Golang Block Chain (A simple implementation)
 
 **Need Go version 1.11 at least since we use go mod function,**
@@ -29,5 +30,14 @@ For tag0.41 add signature, you can delete tmp/wallets.data & tmp/blocks/*.* firs
 - blockchain send -from "The address list in above" -to "another address list in above" -amount 50
 - blockchain printchain
 - blockchain getbalance -address "The address list in above"
+
+For tag 0.5 Adding the unspent transaction outputs(UTXO) persistence layer
+- You can delete ./tmp/block/*.* & ./tmp/wallet.data to clear the chain and wallet
+- blockchain createwallet (You can run this multiple times)
+- blockchain createblockchain -address 1G41xLzHMtKnozJqaL8RBbd44MqFVEETTD(This is the address which you just created at above)
+- blockchain send -from 189iX92pxDWaFiii7FLpcWfFsm2adkdvfA -to 174Xcjx6ePrzVVj28mHJbQPh6AkQ89ehpq -amount 20
+- blockchain listaddresses
+- blockchain printchain
+- You can try all blockchain commands by yourself
 
 Note: I get ideas from TensorFlow, thanks.

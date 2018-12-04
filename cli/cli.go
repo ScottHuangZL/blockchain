@@ -8,12 +8,9 @@ import (
 	"runtime"
 	"strconv"
 
-	//"../blockchain"
-	//"../wallet"
 	"github.com/ScottHuangZL/blockchain/blockchain"
 	"github.com/ScottHuangZL/blockchain/wallet"
 )
-
 
 //CommandLine type
 type CommandLine struct {
@@ -27,6 +24,7 @@ func (cli *CommandLine) printUsage() {
 	fmt.Println(" send -from FROM -to TO -amount AMOUNT - Send amound")
 	fmt.Println(" createwallet - Creates a new wallet")
 	fmt.Println(" listaddresses - Lists the address in our wallet file")
+	fmt.Println(" reindexutxo - Rebuild the UTXO(unspent transaction output) set")
 }
 
 func (cli *CommandLine) validateArgs() {
@@ -34,6 +32,17 @@ func (cli *CommandLine) validateArgs() {
 		cli.printUsage()
 		runtime.Goexit()
 	}
+}
+
+func (cli *CommandLine) reindexUXTO() {
+	chain := blockchain.ContinueBlockChain("")
+	defer chain.Database.Close()
+
+	UTXOset := blockchain.UTXOSet{chain}
+	UTXOset.Reindex()
+
+	count := UTXOset.CountTransactions()
+	fmt.Printf("Done! There are %d transaction in the UTXOset. \n", count)
 }
 
 func (cli *CommandLine) printChain() {
@@ -68,7 +77,12 @@ func (cli *CommandLine) createBlockChain(address string) {
 		log.Panic("Address is not valid")
 	}
 	chain := blockchain.InitBlockChain(address)
-	chain.Database.Close()
+	defer chain.Database.Close()
+
+
+	UTXOset := blockchain.UTXOSet{chain}
+	UTXOset.Reindex()
+
 	fmt.Println("Finished!")
 }
 
@@ -78,13 +92,14 @@ func (cli *CommandLine) getBalance(address string) {
 	}
 
 	chain := blockchain.ContinueBlockChain(address)
+	UTXOset := blockchain.UTXOSet{chain}
 	defer chain.Database.Close()
 
 	balance := 0
 
 	pubKeyHash := wallet.Base58Decode([]byte(address))
 	pubKeyHash = pubKeyHash[1 : len(pubKeyHash)-wallet.ChecksumLength]
-	UTXOs := chain.FindUTXO(pubKeyHash)
+	UTXOs := UTXOset.FindUnspentTransactions(pubKeyHash)
 
 	for _, out := range UTXOs {
 		balance += out.Value
@@ -101,10 +116,13 @@ func (cli *CommandLine) send(from, to string, amount int) {
 		log.Panic("To address is not valid")
 	}
 	chain := blockchain.ContinueBlockChain(from)
+	UTXOset := blockchain.UTXOSet{chain}
 	defer chain.Database.Close()
 
-	tx := blockchain.NewTransaction(from, to, amount, chain)
-	chain.AddBlock([]*blockchain.Transaction{tx})
+	tx := blockchain.NewTransaction(from, to, amount, &UTXOset)
+	block := chain.AddBlock([]*blockchain.Transaction{tx})
+	UTXOset.Update(block)
+
 	fmt.Println("Success!")
 }
 
@@ -113,7 +131,24 @@ func (cli *CommandLine) listAddresses() {
 	addresses := wallets.GetAllAddresses()
 
 	for _, address := range addresses {
-		fmt.Println(address)
+		//fmt.Println(address)
+
+		chain := blockchain.ContinueBlockChain(address)
+		UTXOset := blockchain.UTXOSet{chain}
+
+		balance := 0
+
+		pubKeyHash := wallet.Base58Decode([]byte(address))
+		pubKeyHash = pubKeyHash[1 : len(pubKeyHash)-wallet.ChecksumLength]
+		UTXOs := UTXOset.FindUnspentTransactions(pubKeyHash)
+
+		for _, out := range UTXOs {
+			balance += out.Value
+		}
+
+		fmt.Printf("Address: %s ,PubKeyHash/Script: %x ,Balance: %d\n", address, pubKeyHash, balance)
+		err := chain.Database.Close()
+		blockchain.Handle(err)
 	}
 }
 
@@ -132,6 +167,7 @@ func (cli *CommandLine) Run() {
 	printChainCmd := flag.NewFlagSet("printchain", flag.ExitOnError)
 	createWalletCmd := flag.NewFlagSet("createwallet", flag.ExitOnError)
 	listAddressesCmd := flag.NewFlagSet("listaddresses", flag.ExitOnError)
+	reindexUTXOCmd := flag.NewFlagSet("reindexutxo", flag.ExitOnError)
 
 	getBalanceAddress := getBalanceCmd.String("address", "", "The balance address")
 	createBlockchainAddress := createBlockChainCmd.String("address", "", "The blockchain address")
@@ -158,6 +194,9 @@ func (cli *CommandLine) Run() {
 		blockchain.Handle(err)
 	case "listaddresses":
 		err := listAddressesCmd.Parse(os.Args[2:])
+		blockchain.Handle(err)
+	case "reindexutxo":
+		err := reindexUTXOCmd.Parse(os.Args[2:])
 		blockchain.Handle(err)
 	default:
 		cli.printUsage()
@@ -199,4 +238,9 @@ func (cli *CommandLine) Run() {
 	if createWalletCmd.Parsed() {
 		cli.createWallet()
 	}
+
+	if reindexUTXOCmd.Parsed() {
+		cli.reindexUXTO()
+	}
+
 }

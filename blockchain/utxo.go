@@ -33,7 +33,7 @@ func (u *UTXOSet) DeleteByPrefix(prefix []byte) {
 		return nil
 	}
 
-	u.BlockChain.Database.View(func(txn *badger.Txn) error {
+	_ = u.BlockChain.Database.View(func(txn *badger.Txn) error {
 		opts := badger.DefaultIteratorOptions
 		opts.PrefetchValues = false //we just care about key instead of data.
 		it := txn.NewIterator(opts)

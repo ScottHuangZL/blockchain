@@ -3,7 +3,7 @@ package blockchain
 import "crypto/sha256"
 
 type MerkleTree struct {
-	RootNote *MerkleNode
+	RootNode *MerkleNode
 }
 
 type MerkleNode struct {
@@ -14,6 +14,7 @@ type MerkleNode struct {
 
 func NewMerkleNode(left, right *MerkleNode, data []byte) *MerkleNode {
 	node := MerkleNode{}
+
 	if left == nil && right == nil {
 		hash := sha256.Sum256(data)
 		node.Data = hash[:]
@@ -33,7 +34,7 @@ func NewMerkleTree(data [][]byte) *MerkleTree {
 	var nodes []MerkleNode
 
 	if len(data)%2 != 0 {
-		data = append(data, data[len(data)-1]) //if not even, duplicate the last data to make it even
+		data = append(data, data[len(data)-1])
 	}
 
 	for _, dat := range data {
@@ -55,5 +56,4 @@ func NewMerkleTree(data [][]byte) *MerkleTree {
 	tree := MerkleTree{&nodes[0]}
 
 	return &tree
-
 }

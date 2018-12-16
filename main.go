@@ -3,7 +3,6 @@ package main
 import (
 	"os"
 	"github.com/ScottHuangZL/blockchain/cli"
-	//"./cli"
 )
 
 func main() {

@@ -2,60 +2,36 @@ package blockchain
 
 import (
 	"bytes"
-	"crypto/sha256"
 	"encoding/gob"
 
 	"github.com/ScottHuangZL/blockchain/wallet"
 	//"../wallet"
 )
-
-//TxOutput type
 type TxOutput struct {
-	Value      int    //the value in token is signed and locked
-	PubKeyHash []byte //a value that is needed to unlock the token which are inside the value field
+	Value      int
+	PubKeyHash []byte
 }
 
-
-//TxOutputs to contain multiple TxOutput
 type TxOutputs struct {
 	Outputs []TxOutput
 }
 
-//TxInput type
 type TxInput struct {
-	ID        []byte //references the transaction that the output is inside it
-	Out       int    //index where the output appeared in that transaction
-	Signature []byte //quite similar the pub key in output
+	ID        []byte
+	Out       int
+	Signature []byte
 	PubKey    []byte
 }
 
-//SetID method
-func (tx *Transaction) SetID() {
-	var encoded bytes.Buffer
-	var hash [32]byte
-
-	encode := gob.NewEncoder(&encoded)
-	err := encode.Encode(tx)
-	Handle(err)
-
-	hash = sha256.Sum256(encoded.Bytes())
-	tx.ID = hash[:]
-
-}
-
-//IsCoinbase method
-func (tx *Transaction) IsCoinbase() bool {
-	return len(tx.Inputs) == 1 && len(tx.Inputs[0].ID) == 0 && tx.Inputs[0].Out == -1
-}
-
 func (in *TxInput) UsesKey(pubKeyHash []byte) bool {
-	lockingHash := wallet.PublishKeyHash(in.PubKey)
+	lockingHash := wallet.PublicKeyHash(in.PubKey)
+
 	return bytes.Compare(lockingHash, pubKeyHash) == 0
 }
 
 func (out *TxOutput) Lock(address []byte) {
 	pubKeyHash := wallet.Base58Decode(address)
-	pubKeyHash = pubKeyHash[1 : len(pubKeyHash)-wallet.ChecksumLength]
+	pubKeyHash = pubKeyHash[1 : len(pubKeyHash)-4]
 	out.PubKeyHash = pubKeyHash
 }
 
@@ -66,5 +42,22 @@ func (out *TxOutput) IsLockedWithKey(pubKeyHash []byte) bool {
 func NewTXOutput(value int, address string) *TxOutput {
 	txo := &TxOutput{value, nil}
 	txo.Lock([]byte(address))
+
 	return txo
+}
+
+func (outs TxOutputs) Serialize() []byte {
+	var buffer bytes.Buffer
+	encode := gob.NewEncoder(&buffer)
+	err := encode.Encode(outs)
+	Handle(err)
+	return buffer.Bytes()
+}
+
+func DeserializeOutputs(data []byte) TxOutputs {
+	var outputs TxOutputs
+	decode := gob.NewDecoder(bytes.NewReader(data))
+	err := decode.Decode(&outputs)
+	Handle(err)
+	return outputs
 }

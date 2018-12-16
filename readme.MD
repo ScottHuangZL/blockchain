@@ -10,6 +10,11 @@
 **20181201 : Add wallet function**
 
 **For example:**
+- How to build:
+    - go mod tidy
+    - go mod vendor
+    - go build -mod=vendor
+
 
 For tag 0.21:
 - blockchain createblockchain -address "ScottHuang"
@@ -40,4 +45,20 @@ For tag 0.5 Adding the unspent transaction outputs(UTXO) persistence layer
 - blockchain printchain
 - You can try all blockchain commands by yourself
 
-Note: I get ideas from TensorFlow, thanks.
+
+For tag 0.6 Adding the network
+- open 3 command window, execute below 3 command
+    - set NODE_ID=3000
+    - set NODE_ID=4000
+    - set NODE_ID=5000
+- In each command window, also run 
+    - blockchain createwallet , it will show address, such as 1BpZRTTK4kGSShLTnJDyjwHGgy9ntYaYxn
+- in the NODE_ID=3000 window, run: 
+    - blockchain createblockchain -address 1BpZRTTK4kGSShLTnJDyjwHGgy9ntYaYxn
+    - blockchain send -from 1PmiqcScaNkxNyc5xoo2zkKvTkikvagaE8 -to 1Kvgu9HWVeeCw6xXrV1tcAgtWTcajWnYb3 -amount 10 -mine
+    - blockchain startnode
+- in the NODE_ID=4000 window, also run: blockchain startnode
+- in the NODE_ID=5000 window, run: blockchain send -from 1Kvgu9HWVeeCw6xXrV1tcAgtWTcajWnYb3 -to 1Afi42GPnzkgLuAvTtiZt4LdF2nceGkSCt -amount 1
+- in the NODE_ID=5000 window, run: blockchain startnode -miner 1Kvgu9HWVeeCw6xXrV1tcAgtWTcajWnYb3
+
+Note: I get ideas from Tensor-Programing, thanks.
